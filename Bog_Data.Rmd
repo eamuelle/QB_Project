@@ -1,0 +1,171 @@
+---
+title: "Bog_Data"
+author: "Andrea Phillips and Emmi Mueller; Z620: Quantitative Biodiversity, Indiana University"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: pdf_document
+geometry: margin=2.54cm
+---
+```{r}
+#Clear workspace, set working directory and load packages
+rm(list=ls())
+getwd()
+setwd("~/GitHub/QBProject/")
+
+require("tidyverse")
+require("vegan")
+require("ggplot2")
+require("OTUtable")
+```
+
+```{r}
+#Load bog otu data and print structure
+data(otu_table)
+otu_table <- as.data.frame(t(otu_table))
+```
+
+```{r}
+#Print rarefaction curve and rarefy otu_table to otu.rarefy
+rarecurve(x = otu_table, step = 10, col = "blue", cex = 0.6, las = 1, main = "Bog rarefaction curve")
+abline(0,1, col = 'red')
+abline(v = min.N, col = 'green')
+```
+
+```{r}
+#create otu_JUL07 of all bogs in first few days in JUL07
+JUL07 <- c("CBE02JUL07.R1", "FBE02JUL07.R1", "HKE04JUL07.R1", "MAE04JUL07.R1", "NSE03JUL07.R1", "SSE03JUL07.R1", "TBE02JUL07.R1", "WSE03JUL07")
+otu_JUL07 <- otu_table[grep(paste(JUL07, collapse = "|"), row.names(otu_table)),]
+row.names(otu_JUL07) <- c("Crystal Bog", "Forestry Bog", "Hell's Kitchen", "Mary Lake", "North Sparkling Bog", "South Sparkling Bog", "Trout Bog", "West Sparkling Bog")
+
+```
+
+```{r}
+#looking at correlations between Crystal Bog and Mary Lake on the same date 
+
+#CBE01OCT07 and CBE27JUN07
+(cor(otu_table[[24]], otu_table[[80]]))^2
+
+#CBE27JUN07 and MAE27JUN07
+(cor(otu_table[[80]], otu_table[[444]]))^2
+
+#CBE01OCT07 and MAE01OCT07
+(cor(otu_table[[24]], otu_table[[372]]))^2
+```
+
+```{r}
+#spatial diversity
+require("vegan")
+#install.packages("sp")
+require("sp")
+#install.packages("gstat")
+require("gstat")
+#install.packages("raster")
+require("raster")
+#install.packages("RgoogleMaps")
+require("RgoogleMaps")
+#install.packages("maptools")
+require("maptools")
+#install.packages("rgdal")
+require("rgdal")
+#install.packages("simba")
+require("simba")
+#install.packages("gplots")
+require("gplots")
+#install.packages("rgeos")
+require(rgeos)
+require(viridis)
+require(gplots)
+
+boglocate <- read.table("NTL_MO_bogs_location.txt", header = TRUE, sep = "\t")
+boglocate <- boglocate[1:8, 1:4]
+otu.names <- names(otu_table)
+
+#removed bogsbys because it just removed the first OTU from out sbys matrix
+
+lats <-as.numeric(boglocate[,3])
+lons <-as.numeric(boglocate[,4])
+
+
+#Add API key
+newmap <- GetMap(center = c(lat = 46.12,lon = -89.75), zoom = 11, destfile = "BogMap.png", maptype = "terrain")
+newmap <- GetMap(center = c(lat = 46.12,lon = -89.75), zoom = 11, destfile = "BogMap.png", maptype = "terrain")
+
+
+PlotOnStaticMap(newmap, zoom = 11, cex = 2, col = 'blue')
+PlotOnStaticMap(newmap, lats, lons, cex = 1, pch = 20, col = 'red', add = TRUE)
+
+```
+
+```{r}
+ssad <-function(otu_table, otu){
+  ad <-c(2,2)
+  ad <-otu_table[, otu]
+  ad = as.vector(t(x = ad))
+  ad = ad[ad >0]
+}
+
+par(mfrow = c(2,2))
+ct <- 0
+while (ct < 4){
+  otu <- sample(1:length(otu_table), 1)
+  ad <- ssad(otu_table, otu)
+  if (length(ad) > 10 & sum(ad >100)){
+    ct <- ct + 1
+    plot(density(ad), col = "red", xlab = "Site abundance", ylab = "Probability Density", main = otu.names[otu])
+  }
+}
+```
+```{r}
+otu_JUL07.db <- vegdist(otu_JUL07, method = "bray", upper = TRUE, diag = TRUE)
+order <- rev(attr(otu_JUL07.db, "Labels"))
+levelplot(as.matrix(otu_JUL07.db)[, order], aspect = "iso", col.regions = inferno, xlab = "Bog site", ylab = "Bog site", scales = list(cex = 0.5), main = "Bray-Curtis Distance")
+
+JUL07.ward <- hclust(otu_JUL07.db, method = "ward.D2")
+
+par(mar = c(1,5,2,2) + 0.1)
+plot(JUL07.ward, main = "Bog Sites: Ward's Clustering", ylab = "Squared Bray-Curtis Distance")
+
+
+bog.pcoa <- cmdscale(otu_JUL07.db, eig = TRUE, k= 3)
+explainvar1 <- round(bog.pcoa$eig[1] / sum(bog.pcoa$eig), 3) * 100
+explainvar2 <- round(bog.pcoa$eig[2] / sum(bog.pcoa$eig), 3) * 100
+explainvar3 <- round(bog.pcoa$eig[3] / sum(bog.pcoa$eig), 3) * 100
+
+par(mar = c(5,5,1,2) + 0.1)
+
+plot(bog.pcoa$points[,1], bog.pcoa$points[,2],
+     xlab = paste("PCoA 1 (", explainvar1, "%)", sep = ""),
+     ylab = paste("PCoA 2 (", explainvar2, "%)", sep = ""),
+     pch = 16, cex = 3.0, type = "n", cex.lab = 1.2, cex.axis = 1.2, axes = FALSE)
+
+axis(side = 1, labels = T, lwd.ticks = 2, cex.axis = 1.2, las = 1)
+axis(side = 2, labels = T, lwd.ticks = 2, cex.axis = 1.2, las = 1)
+abline(h = 0, v = 0, lty = 3)
+box(lwd = 2)
+
+points(bog.pcoa$points[,1], bog.pcoa$points[,2], pch = 19, cex = 3, bg = "gray", col = "gray")
+
+text(bog.pcoa$points[,1], bog.pcoa$points[,2], labels = row.names(bog.pcoa$points))
+
+```
+
+
+```{r}
+#install temporal diversity packages
+#We're not sure if we're going to use this yet
+package.list <- c('vegan', 'tidyr', 'dplyr', 'codyn', 'ggplot2', 'cowplot', 'MullerPlot', 'RColorBrewer', 'reshape2', 'lubridate', 'TTR', 'xtable', 'multcomp', 'pander', 'png', 'grid', 'tseries', 'nlme', 'forecast', 'emmeans')
+for (package in package.list) {
+  if (!require(package, character.only = TRUE, quietly = TRUE)) {
+    install.packages(package, repos='http://cran.us.r-project.org')
+library(package, character.only = TRUE)
+  }
+}
+
+bog_loc <- read.table("~/Github/QBProject/NTL_MO_bogs_location.txt", sep = ",", header = TRUE)
+bog_loc <- unite(bog_loc, col = date, c(year, month, day), sep = "-", remove = FALSE)
+bog_loc <- unite(portal, col = taxon, c(genus, species), sep = "-", remove = FALSE)
+
+time.by.species <- group_by(bog_loc, year, plot_id) %>%
+count(taxon) %>% spread(key = taxon, value = n, fill = 0)
+
+time.by.species <- as.data.frame(time.by.species)
+```

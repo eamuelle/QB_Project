@@ -1,0 +1,27 @@
+location_id	location_name	latitude	longitude	elevation	parent_location_id
+Crystal Bog	Crystal Bog	46.007639	-89.606341		
+Forestry Bog	Forestry Bog	46.04777	-89.651248		
+Hells Kitchen	Hells Kitchen	46.186674	-89.70251		
+Mary Lake	Mary Lake	46.250764	-89.900419		
+North Sparkling Bog	North Sparkling Bog	46.004819	-89.705214		
+South Sparkling Bog	South Sparkling Bog	46.003362	-89.705335		
+Trout Bog	Trout Bog	46.04114	-89.686352		
+West Sparkling Bog	West Sparkling Bog	46.004633	-89.709082		
+Crystal Bog Unknown	Crystal Bog sample layer is Unknown				Crystal Bog
+Crystal Bog Epilimnion	Crystal Bog sample layer is Epilimnion				Crystal Bog
+Crystal Bog Hypolimnion	Crystal Bog sample layer is Hypolimnion				Crystal Bog
+Forestry Bog Epilimnion	Forestry Bog sample layer is Epilimnion				Forestry Bog
+Forestry Bog Hypolimnion	Forestry Bog sample layer is Hypolimnion				Forestry Bog
+Hells Kitchen Epilimnion	Hells Kitchen sample layer is Epilimnion				Hells Kitchen
+Hells Kitchen Hypolimnion	Hells Kitchen sample layer is Hypolimnion				Hells Kitchen
+Mary Lake Epilimnion	Mary Lake sample layer is Epilimnion				Mary Lake
+Mary Lake Hypolimnion	Mary Lake sample layer is Hypolimnion				Mary Lake
+North Sparkling Bog Epilimnion	North Sparkling Bog sample layer is Epilimnion				North Sparkling Bog
+North Sparkling Bog Hypolimnion	North Sparkling Bog sample layer is Hypolimnion				North Sparkling Bog
+North Sparkling Bog Unknown	North Sparkling Bog sample layer is Unknown				North Sparkling Bog
+South Sparkling Bog Epilimnion	South Sparkling Bog sample layer is Epilimnion				South Sparkling Bog
+South Sparkling Bog Hypolimnion	South Sparkling Bog sample layer is Hypolimnion				South Sparkling Bog
+Trout Bog Epilimnion	Trout Bog sample layer is Epilimnion				Trout Bog
+Trout Bog Hypolimnion	Trout Bog sample layer is Hypolimnion				Trout Bog
+West Sparkling Bog Epilimnion	West Sparkling Bog sample layer is Epilimnion				West Sparkling Bog
+West Sparkling Bog Hypolimnion	West Sparkling Bog sample layer is Hypolimnion				West Sparkling Bog
