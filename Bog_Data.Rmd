@@ -208,7 +208,7 @@ metadata_JUL07 <- as.matrix(metadata_JUL07)
 
 bog.dbrda <- dbrda(otu_JUL07~ ., as.data.frame(metadata_JUL07), dist = "bray")
 
-require(psych)
+require("psych")
 psych::corr.test(metadata_JUL07)
 
 bog.dbrda.modO <- dbrda(jul07.dist ~ 1, as.data.frame(metadata_JUL07))
@@ -275,4 +275,43 @@ for (i in 1:nrow(otu_JUL07)){
 bog.pcoa <- add.spec.scores(bog.pcoa,bogREL,method = "pcoa.scores")
 
 text(bog.pcoa$cproj[,1], bog.pcoa$cproj[,2], labels = row.names(bog.pcoa$cproj), col = "black")
+```
+
+```{r}
+install.packages("simba")
+require("simba")
+
+bog_loc <- read.table("~/Github/QB_Project/NTL_MO_bogs_location.txt", sep = ",", header = TRUE)
+otu_JUL07.db <- vegdist(otu_JUL07, method = "bray", upper = TRUE, diag = TRUE)
+#sites <- boglocate[,2]
+
+
+lats <-as.numeric(boglocate[,3])
+lons <-as.numeric(boglocate[,4])
+#bogDataPoints <- data.frame(sites, lats, lons)
+coord.dist <- dist(as.matrix(lats, lons))
+x1 <- as.numeric(metadata_JUL07)
+env.dist <- vegdist(x1, "euclidean")
+comm.dist.ls <- liste(otu_JUL07.db, entry = "comm")
+env.dist.ls <- liste(env.dist, entry = "env")
+coord.dist.ls <- liste(coord.dist, entry = "dist")
+df <- data.frame(coord.dist.ls, env.dist.ls[,3], comm.dist.ls[,3])
+names(df)[4:5] <- c("env", "struc")
+attach(df)
+
+par(mfrow=c(1, 2), pty = "s")
+plot(env, struc, xlab = "Environmental Distance", ylab = "1 - Bray-Curtis",
+     main = "Environment", col = 'SteelBlue')
+
+OLS <- lm(struc ~ env)
+OLS
+abline(OLS, col = "red4")
+
+plot(dist, struc, xlab = "Geographic Distance", ylab = "1 = Bray-Curtis",
+     main = "Community\nComposition", col = 'darkorchid4')
+
+OLS <- lm(struc ~ dist)
+OLS
+abline(OLS, col = "red4")
+
 ```
