@@ -9,7 +9,7 @@ geometry: margin=2.54cm
 #Clear workspace, set working directory and load packages
 rm(list=ls())
 getwd()
-setwd("~/GitHub/QB_Project/")
+#setwd("~/GitHub/QB_Project/")
 
 require("tidyverse")
 require("vegan")
@@ -278,10 +278,10 @@ text(bog.pcoa$cproj[,1], bog.pcoa$cproj[,2], labels = row.names(bog.pcoa$cproj),
 ```
 
 ```{r}
-install.packages("simba")
+#install.packages("simba")
 require("simba")
 
-bog_loc <- read.table("~/Github/QB_Project/NTL_MO_bogs_location.txt", sep = ",", header = TRUE)
+bog_loc <- read.table("NTL_MO_bogs_location.txt", header = TRUE, sep = "\t")
 otu_JUL07.db <- vegdist(otu_JUL07, method = "bray", upper = TRUE, diag = TRUE)
 #sites <- boglocate[,2]
 
