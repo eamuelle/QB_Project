@@ -300,14 +300,14 @@ names(df)[4:5] <- c("env", "struc")
 attach(df)
 
 par(mfrow=c(1, 3), pty = "s")
-plot(env, struc, xlab = "Environmental Distance", ylab = "1 - Bray-Curtis",
+plot(env, struc, xlab = "Environmental Distance", ylab = "Bray-Curtis Dissimilarity",
      main = "Environmental Distance", col = 'SteelBlue')
 
 OLS <- lm(struc ~ env)
 OLS
 abline(OLS, col = "red4")
 
-plot(dist, struc, xlab = "Geographic Distance", ylab = "1 - Bray-Curtis",
+plot(dist, struc, xlab = "Geographic Distance", ylab = "Bray-Curtis Dissimilarity",
      main = "Community\nComposition\n", col = 'darkorchid4')
 
 OLS <- lm(struc ~ dist)
@@ -319,7 +319,6 @@ plot(dist, env, xlab = "Geographic Distance", ylab = "Environmental Distance", m
 OLS <- lm(env ~ dist)
 OLS
 abline(OLS, col = "red4")
-abline(a = 0, b = 1, col ="blue")
 
 diffslope(env, struc, dist, struc)
 
