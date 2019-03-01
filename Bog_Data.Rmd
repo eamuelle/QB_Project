@@ -25,9 +25,10 @@ otu_table <- as.data.frame(t(otu_table))
 
 ```{r}
 #Print rarefaction curve and rarefy otu_table to otu.rarefy
+min.N <- min(rowSums(otu_table))
 rarecurve(x = otu_table, step = 10, col = "blue", cex = 0.6, las = 1, main = "Bog rarefaction curve")
 abline(0,1, col = 'red')
-#abline(v = min.N, col = 'green')
+abline(v = min.N, col = 'green')
 ```
 
 ```{r}
@@ -52,7 +53,7 @@ row.names(otu_JUL07) <- c("Crystal Bog", "Forestry Bog", "Hell's Kitchen", "Mary
 ```
 
 ```{r}
-#spatial diversity
+#spatial diversity, create map
 require("vegan")
 #install.packages("sp")
 require("sp")
@@ -71,9 +72,10 @@ require("simba")
 #install.packages("gplots")
 require("gplots")
 #install.packages("rgeos")
-require(rgeos)
-require(viridis)
-require(gplots)
+require("rgeos")
+require("viridis")
+require("gplots")
+require("RColorBrewer")
 
 boglocate <- read.table("NTL_MO_bogs_location.txt", header = TRUE, sep = "\t")
 boglocate <- boglocate[1:8, 1:4]
@@ -90,25 +92,27 @@ palette <- brewer.pal(8, "Spectral")
 bogDataPoints$colors <- palette
 
 
-#Add API key
-newmap <- GetMap(center = c(lat = 46.12,lon = -89.75), zoom = 11, destfile = "BogMap.png", maptype = "terrain", API_console_key = )
-
-
-PlotOnStaticMap(newmap, zoom = 11, cex = 2, col = 'blue')
-PlotOnStaticMap(newmap, lats, lons, cex = 3, pch = 20, col = bogDataPoints$colors, add = TRUE)
-
-tblleg <- unique(bogDataPoints[,c("sites","colors")])
-row.names(tblleg) <- NULL
-
-legend("topright", legend = tblleg$sites, fill = tblleg$colors,bg = "white")
+# #Add API key
+# newmap <- GetMap(center = c(lat = 46.12,lon = -89.75), zoom = 11, destfile = "BogMap.png", maptype = "terrain", API_console_key = )
+# 
+# 
+# PlotOnStaticMap(newmap, zoom = 11, cex = 2, col = 'blue')
+# PlotOnStaticMap(newmap, lats, lons, cex = 3, pch = 20, col = bogDataPoints$colors, add = TRUE)
+# 
+# tblleg <- unique(bogDataPoints[,c("sites","colors")])
+# row.names(tblleg) <- NULL
+# 
+# legend("topright", legend = tblleg$sites, fill = tblleg$colors,bg = "white")
 ```
 
 ```{r}
+#generate ssad for multiple randomly chosen OTU
 ssad <-function(otu_table, otu){
   ad <-c(2,2)
-  ad <-otu_table[, otu]
+  ad <- otu_table[, otu]
   ad = as.vector(t(x = ad))
   ad = ad[ad >0]
+  return(ad)
 }
 
 par(mfrow = c(2,2))
@@ -123,6 +127,7 @@ while (ct < 4){
 }
 ```
 ```{r}
+#beta diversity of bog communities
 otu_JUL07.db <- vegdist(otu_JUL07, method = "bray", upper = TRUE, diag = TRUE)
 order <- rev(attr(otu_JUL07.db, "Labels"))
 levelplot(as.matrix(otu_JUL07.db)[, order], aspect = "iso", col.regions = inferno, xlab = "Bog site", ylab = "Bog site", scales = list(cex = 0.5), main = "Bray-Curtis Distance")
@@ -143,7 +148,7 @@ par(mar = c(5,5,1,2) + 0.1)
 plot(bog.pcoa$points[,1], bog.pcoa$points[,2],
      xlab = paste("PCoA 1 (", explainvar1, "%)", sep = ""),
      ylab = paste("PCoA 2 (", explainvar2, "%)", sep = ""),
-     pch = 16, cex = 3.0, type = "n", cex.lab = 1.2, cex.axis = 1.2, axes = FALSE)
+     pch = 16, cex = 3.0, type = "n", cex.lab = 1.2, cex.axis = 1.2, axes = FALSE, xlim = c(-0.4, 0.5))
 
 axis(side = 1, labels = T, lwd.ticks = 2, cex.axis = 1.2, las = 1)
 axis(side = 2, labels = T, lwd.ticks = 2, cex.axis = 1.2, las = 1)
@@ -158,27 +163,6 @@ text(bog.pcoa$points[,1], bog.pcoa$points[,2], labels = row.names(bog.pcoa$point
 
 
 ```{r}
-#install temporal diversity packages
-#We're not sure if we're going to use this yet
-package.list <- c('vegan', 'tidyr', 'dplyr', 'codyn', 'ggplot2', 'cowplot', 'MullerPlot', 'RColorBrewer', 'reshape2', 'lubridate', 'TTR', 'xtable', 'multcomp', 'pander', 'png', 'grid', 'tseries', 'nlme', 'forecast', 'emmeans')
-for (package in package.list) {
-  if (!require(package, character.only = TRUE, quietly = TRUE)) {
-    install.packages(package, repos='http://cran.us.r-project.org')
-library(package, character.only = TRUE)
-  }
-}
-
-bog_loc <- read.table("~/Github/QB_Project/NTL_MO_bogs_location.txt", sep = ",", header = TRUE)
-bog_loc <- unite(bog_loc, col = date, c(year, month, day), sep = "-", remove = FALSE)
-bog_loc <- unite(portal, col = taxon, c(genus, species), sep = "-", remove = FALSE)
-
-time.by.species <- group_by(bog_loc, year, plot_id) %>%
-count(taxon) %>% spread(key = taxon, value = n, fill = 0)
-
-time.by.species <- as.data.frame(time.by.species)
-```
-
-```{r}
 #Set up metadata for JUL07 sites
 data(metadata)
 rows <- c(4971,4977,5004,5025,4982,4988,4962,4998)
@@ -186,7 +170,7 @@ metadata_JUL07 <- metadata[rows, -1]
 row.names(metadata_JUL07) <- c("Crystal Bog", "Forestry Bog","Hell's Kitchen","Mary Lake","North Sparkling Bog", "Sourth Sparkling Bog", "Trout Bog", "West Sparkling Bog")
 num = 1
 rows <- c(4976,4981,5024,5048,4987,4997,4970,5003)
-while(num < nrow(metadata_JUL07)){
+while(num - 1 < nrow(metadata_JUL07)){
   depth_current <- metadata$Depth[rows[num]]
   metadata_JUL07$Depth[num] <- depth_current
   num <- num + 1
@@ -203,17 +187,21 @@ jul07.env.dist <- vegdist(scale(metadata_JUL07), method = "euclid")
 mantel(jul07.dist, jul07.env.dist)
 
 print(jul07.dist)
+
 #dbRDA from metadata
 metadata_JUL07 <- as.matrix(metadata_JUL07)
 
-bog.dbrda <- dbrda(otu_JUL07~ ., as.data.frame(metadata_JUL07), dist = "bray")
+#dbRDA from metadata only lats + lons
+bog.dbrda <- dbrda(otu_JUL07~ lats + lons + Temperature, as.data.frame(metadata_JUL07), dist = "bray")
+
+#bog.dbrda <- dbrda(otu_JUL07~ ., as.data.frame(metadata_JUL07), dist = "bray")
 
 require("psych")
 psych::corr.test(metadata_JUL07)
 
-bog.dbrda.modO <- dbrda(jul07.dist ~ 1, as.data.frame(metadata_JUL07))
-bog.dbrda.mod1 <- dbrda(jul07.dist ~ ., as.data.frame(metadata_JUL07))
-bog.dbrda <- ordiR2step(bog.dbrda.modO, bog.dbrda.mod1, perm.max = 200)
+# bog.dbrda.modO <- dbrda(jul07.dist ~ 1, as.data.frame(metadata_JUL07))
+# bog.dbrda.mod1 <- dbrda(jul07.dist ~ ., as.data.frame(metadata_JUL07))
+# bog.dbrda <- ordiR2step(bog.dbrda.modO, bog.dbrda.mod1, perm.max = 200)
 
 bog.dbrda$call
 bog.dbrda$anova
@@ -227,7 +215,7 @@ dbrda.explainvar2 <- round(bog.dbrda$CCA$eig[2]/ sum(c(bog.dbrda$CCA$eig, bog.db
 
 par(mar = c(5,5,4,4) + 0.1)
 
-plot(scores(bog.dbrda, display = "wa"), xlim = c(-1.3, 1.5), ylim = c(-1.1, 2.7), xlab = paste("dbRDA 1 (", dbrda.explainvar1, "%)", sep = ""), ylab = paste("dbRDA 2 (", dbrda.explainvar2, "%)", sep = ""), pch = 16, cex = 2.0, type = "n", cex.lab = 1.5, cex.axis = 1.2, axes = FALSE)
+plot(scores(bog.dbrda, display = "wa"), xlim = c(-1.3, 1.5), ylim = c(-1.5, 2.7), xlab = paste("dbRDA 1 (", dbrda.explainvar1, "%)", sep = ""), ylab = paste("dbRDA 2 (", dbrda.explainvar2, "%)", sep = ""), pch = 16, cex = 2.0, type = "n", cex.lab = 1.5, cex.axis = 1.2, axes = FALSE)
 
 axis(side = 1, labels = T, lwd.ticks = 2, cex.axis = 1.2, las=1)
 axis(side = 2, labels = T, lwd.ticks = 2, cex.axis = 1.2, las=1)
@@ -246,6 +234,7 @@ axis(side=4, lwd.ticks = 2, cex.axis=1.2, las = 1, col = "red", lwd = 2.2, at = 
 ```
 
 ```{r}
+#Relativized PCoA
 bog.pcoa <- cmdscale(jul07.dist, eig = TRUE, k= 3)
 explainvar1 <- round(bog.pcoa$eig[1] / sum(bog.pcoa$eig), 3) * 100
 explainvar2 <- round(bog.pcoa$eig[2] / sum(bog.pcoa$eig), 3) * 100
@@ -271,13 +260,11 @@ bogREL <- otu_JUL07
 for (i in 1:nrow(otu_JUL07)){
   bogREL[i,] = otu_JUL07[i,]/sum(otu_JUL07[i,])
 }
-
-bog.pcoa <- add.spec.scores(bog.pcoa,bogREL,method = "pcoa.scores")
-
-text(bog.pcoa$cproj[,1], bog.pcoa$cproj[,2], labels = row.names(bog.pcoa$cproj), col = "black")
 ```
 
 ```{r}
+#Relationship between environmental distance, geographic distance and community distance
+#distance decay relationship
 #install.packages("simba")
 require("simba")
 
